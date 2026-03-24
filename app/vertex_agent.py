@@ -476,7 +476,9 @@ def run_vertex_agent(message: str, user_id: str | None = None) -> dict[str, Any]
                 # Inject user_id when schema allows it by the model's omission.
                 if "user_id" in handler.__code__.co_varnames and "user_id" not in fn_args:  # type: ignore[attr-defined]
                     fn_args["user_id"] = user_id
-                tool_result = handler(**fn_args)  # type: ignore[misc]
+                raw_result = handler(**fn_args)  # type: ignore[misc]
+                # Vertex AI Protobuf cannot serialize raw Python datetimes, so we stringify them:
+                tool_result = json.loads(json.dumps(raw_result, default=str))
                 last_tool_data = tool_result
 
             function_response_parts.append(
